@@ -5,7 +5,6 @@ const auth = require("../middlewares/auth");
 
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
-  console.log(user);
   try {
     await user.save();
     const token = await user.generateAuthToken();
@@ -32,32 +31,27 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-router.patch("/users/:id", async (req, res) => {
+router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-
   const allowedUpdates = ["name", "email", "password", "age"];
-  const invalidOperation = updates.every((update) =>
+  const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
 
-  if (!invalidOperation) {
-    return res.status(400).send({ error: "Invalid updates" });
+  if (!isValidOperation) {
+    return res.status(400).send({ error: "Invalid updates!" });
   }
-
-  const _id = req.params.id;
+  const user = req.user;
   try {
-    const user = await User.findById(_id);
-    updates.forEach((update, i) => {
+    updates.forEach((update) => {
       user[update] = req.body[update];
     });
-    await user.save();
 
-    if (!user) {
-      return res.status(404).send();
-    }
+    await user.save();
     res.send(user);
   } catch (e) {
-    res.status(400).send(e);
+    console.log(e);
+    res.status(400).send();
   }
 });
 
@@ -101,13 +95,17 @@ router.post("/users/logoutAll", auth, async (req, res) => {
   }
 });
 
-router.delete("/users/:id", async (req, res) => {
+router.delete("/users/me", auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).send();
-    }
-    res.send(user);
+    // we have access to the req.user from the auth middleware
+    // const user = await User.findByIdAndDelete(req.user._id);
+    // if (!user) {
+    //   return res.status(404).send();
+    // }
+
+    // the user is coming from the middleware (auth)
+    await req.user.remove();
+    res.send(req.user);
   } catch (e) {
     res.status(500).send();
   }

@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema({
     },
   ],
 });
+
 // statics. is accessible on models
 userSchema.statics.findByCredentials = async (email, password) => {
   const user = await User.findOne({ email });
@@ -62,6 +63,22 @@ userSchema.statics.findByCredentials = async (email, password) => {
   }
 
   return user;
+};
+
+// setup virtual attributes: a way for mongoose to figure out relationship
+userSchema.virtual("tasks", {
+  ref: "Task",
+  localField: "_id",
+  foreignField: "owner",
+});
+
+userSchema.methods.toJSON = function () {
+  const user = this;
+  // get the raw profile data
+  const userObject = user.toObject();
+  delete userObject.password;
+  delete userObject.tokens;
+  return userObject;
 };
 
 // .method. is accessible on instances
@@ -80,7 +97,6 @@ userSchema.pre("save", async function (next) {
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
   }
-  console.log(user);
   next();
 });
 
