@@ -17,17 +17,30 @@ router.post("/tasks", auth, async (req, res) => {
   }
 });
 
-// get /tasks?complete=true or false
+// get /tasks?complete=true or false (filtering)
+// limit skip for pagination => Get /tasks?limit=10&skip=0 or 10 or 20 etc
+// sort by GET /tasks?sortBy=createdAt:asc
 router.get("/tasks", auth, async (req, res) => {
   const match = {};
+  const sort = {}; // for createdAt
   if (req.query.completed) {
     match.completed = req.query.completed === "true";
+  }
+  if (req.query.sortBy) {
+    const parts = req.query.sortBy.split(":");
+    sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
   }
   try {
     await req.user
       .populate({
         path: "tasks",
-        match,
+        match, // for filtering
+        options: {
+          // for pagination
+          limit: parseInt(req.query.limit),
+          skip: parseInt(req.query.skip),
+          sort,
+        },
       })
       .execPopulate();
 
