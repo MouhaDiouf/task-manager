@@ -3,54 +3,58 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Task = require("./task");
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  age: {
-    type: Number,
-    default: 0,
-    validate(value) {
-      if (value < 0) {
-        throw new Error("Age must be a postitive number");
-      }
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-  },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    unique: true,
-    lowercase: true,
-    validate(value) {
-      if (!validator.isEmail(value)) {
-        throw new Error("Email is not valid");
-      }
-    },
-  },
-
-  password: {
-    type: String,
-    required: true,
-    minLength: 7,
-    trim: true,
-    validate(value) {
-      if (value.toLowerCase().includes("password")) {
-        throw new Error('Password should not contain "password" ');
-      }
-    },
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
+    age: {
+      type: Number,
+      default: 0,
+      validate(value) {
+        if (value < 0) {
+          throw new Error("Age must be a postitive number");
+        }
       },
     },
-  ],
-  timestams: true,
-});
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+      lowercase: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Email is not valid");
+        }
+      },
+    },
+
+    password: {
+      type: String,
+      required: true,
+      minLength: 7,
+      trim: true,
+      validate(value) {
+        if (value.toLowerCase().includes("password")) {
+          throw new Error('Password should not contain "password" ');
+        }
+      },
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
 
 // statics. is accessible on models
 userSchema.statics.findByCredentials = async (email, password) => {
