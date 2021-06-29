@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 const auth = require("../middlewares/auth");
+const multer = require("multer");
+const upload = multer({
+  dest: "avatars",
+});
 
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
@@ -53,6 +57,10 @@ router.patch("/users/me", auth, async (req, res) => {
     console.log(e);
     res.status(400).send();
   }
+});
+
+router.post("/users/me/avatar", upload.single("avatar"), (req, res) => {
+  res.send();
 });
 
 // hash the plain text password before saving
