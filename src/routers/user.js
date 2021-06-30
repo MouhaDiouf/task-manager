@@ -84,6 +84,11 @@ router.post(
   }
 );
 
+router.delete("/uesrs/me/avatar", auth, async (req, res) => {
+  req.user.avatar = undefined;
+  await req.user.save();
+  res.send();
+});
 // hash the plain text password before saving
 router.post("/users/login", async (req, res) => {
   try {
