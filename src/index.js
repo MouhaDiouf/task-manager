@@ -11,6 +11,21 @@ const taskRouter = require("./routers/task");
 const multer = require("multer");
 const upload = multer({
   dest: "images", // for destination updloads
+  limits: {
+    fileSize: 1000000, // for 1 mb (1 million bytes)
+  },
+  // validation for file type
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(doc|docx)$/)) {
+      return cb(new Error("Please upload a word document"));
+    }
+    // this accepts the file
+    cb(undefined, true);
+    // three types of cb calls outputs
+    // cb(new Error("File must be a PDF"));
+    // cb(undefined, true);
+    // cb(undefined, false)
+  },
 });
 
 app.use(express.json());
@@ -23,9 +38,16 @@ app.listen(port, () => {
 
 //upload.sing('upload') means look for an 'upload' key in the sent data
 
-app.post("/upload", upload.single("upload"), (req, res) => {
-  res.send();
-});
+app.post(
+  "/upload",
+  upload.single("upload"),
+  (req, res) => {
+    res.send();
+  },
+  (error, req, res, next) => {
+    res.status(400).send({ error: error.message });
+  }
+);
 
 // this is to establis relationships
 // const main = async () => {

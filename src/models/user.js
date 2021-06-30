@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+
+    avatar: {
+      type: Buffer,
+    },
   },
   {
     timestamps: true,
@@ -91,7 +95,6 @@ userSchema.methods.toJSON = function () {
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
   const token = jwt.sign({ _id: user.id }, "thisismysignkey");
-  console.log("before save ****", user);
   user.tokens = user.tokens.concat({ token });
   await user.save();
   return token;

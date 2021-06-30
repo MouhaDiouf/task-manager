@@ -3,9 +3,6 @@ const router = express.Router();
 const User = require("../models/user");
 const auth = require("../middlewares/auth");
 const multer = require("multer");
-const upload = multer({
-  dest: "avatars",
-});
 
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
@@ -59,9 +56,33 @@ router.patch("/users/me", auth, async (req, res) => {
   }
 });
 
-router.post("/users/me/avatar", upload.single("avatar"), (req, res) => {
-  res.send();
+const upload = multer({
+  // dest: "avatars",  removing this line will no longer save it to the avatars directory. Instead, it's going allow us to save it to the user object as a buffer
+  limits: {
+    fileSize: 1000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(|jpg|jpeg|png)$/)) {
+      return cb(new Error("Please upload an image"));
+    }
+
+    cb(undefined, true);
+  },
 });
+
+router.post(
+  "/users/me/avatar",
+  auth,
+  upload.single("avatar"),
+  async (req, res) => {
+    req.user.avatar = req.file.buffer; // only accessible when we don't have the "dest:" set up on the upload on multer
+    await req.user.save();
+    res.send();
+  },
+  (error, req, res, next) => {
+    res.status(400).send({ message: error.message });
+  }
+);
 
 // hash the plain text password before saving
 router.post("/users/login", async (req, res) => {
